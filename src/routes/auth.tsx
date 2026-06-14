@@ -1,4 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
 import { useState, useEffect, useRef } from "react";
 import { toast } from "sonner";
 import { Store, MailCheck, RefreshCw, Loader2 } from "lucide-react";
@@ -21,6 +22,8 @@ type Pending = { email: string; password: string } | null;
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
+  const sendSignupOtpFn = useServerFn(sendSignupOtp);
+  const verifySignupOtpFn = useServerFn(verifySignupOtp);
   const [loading, setLoading] = useState(false);
   const [pending, setPending] = useState<Pending>(null);
   const [code, setCode] = useState("");
@@ -29,8 +32,8 @@ function AuthPage() {
   const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (user) navigate({ to: "/" });
-  }, [user, navigate]);
+    if (user && !pending && !loading) navigate({ to: "/" });
+  }, [user, pending, loading, navigate]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -74,19 +77,27 @@ function AuthPage() {
       },
     });
     if (error) {
+      if (error.message.toLowerCase().includes("already registered")) {
+        try {
+          const res = await sendSignupOtpFn({ data: { email } });
+          setLoading(false);
+          setResendIn(res.ok ? 30 : Math.ceil((res.cooldownMs ?? 30_000) / 1000));
+          setPending({ email, password });
+          setCode("");
+          toast.success("We sent you a 6-digit code");
+          return;
+        } catch (err: any) {
+          setLoading(false);
+          return toast.error(err?.message ?? "Couldn't send confirmation code");
+        }
+      }
       setLoading(false);
       return toast.error(error.message);
     }
-    if (data.session) {
-      // Auto-confirm enabled — just go in
-      setLoading(false);
-      toast.success("Account created!");
-      navigate({ to: "/" });
-      return;
-    }
+    if (data.session) await supabase.auth.signOut();
     // Send our own 6-digit code via Resend
     try {
-      const res = await sendSignupOtp({ data: { email } });
+      const res = await sendSignupOtpFn({ data: { email } });
       setLoading(false);
       if (!res.ok && res.cooldownMs) {
         setResendIn(Math.ceil(res.cooldownMs / 1000));
@@ -108,7 +119,7 @@ function AuthPage() {
     if (!/^\d{6}$/.test(c)) return;
     setVerifying(true);
     try {
-      const res = await verifySignupOtp({ data: { email: pending.email, code: c } });
+      const res = await verifySignupOtpFn({ data: { email: pending.email, code: c } });
       if (!res.ok) {
         setVerifying(false);
         const msg: Record<string, string> = {
@@ -141,7 +152,7 @@ function AuthPage() {
   async function resendCode() {
     if (!pending || resendIn > 0) return;
     try {
-      const res = await sendSignupOtp({ data: { email: pending.email } });
+      const res = await sendSignupOtpFn({ data: { email: pending.email } });
       if (!res.ok && res.cooldownMs) {
         setResendIn(Math.ceil(res.cooldownMs / 1000));
         toast.info("Please wait a moment before resending");

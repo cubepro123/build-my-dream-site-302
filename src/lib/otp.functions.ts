@@ -56,6 +56,7 @@ async function sendOtpEmail(to: string, code: string) {
   });
   if (!res.ok) {
     const text = await res.text();
+    console.error("OTP email send failed", { status: res.status, body: text.slice(0, 300) });
     throw new Error(`Resend ${res.status}: ${text.slice(0, 300)}`);
   }
 }
@@ -92,7 +93,10 @@ export const sendSignupOtp = createServerFn({ method: "POST" })
       consumed_at: null,
       last_sent_at: now,
     });
-    if (error) throw new Error(error.message);
+    if (error) {
+      console.error("OTP save failed", { message: error.message });
+      throw new Error(error.message);
+    }
 
     await sendOtpEmail(email, code);
     return { ok: true };
