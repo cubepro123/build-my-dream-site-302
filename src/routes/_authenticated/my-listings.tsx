@@ -32,8 +32,23 @@ function MyListings() {
   const algDelete = useServerFn(deleteListingFromIndex);
   const algReindex = useServerFn(reindexAllListings);
   const [reindexing, setReindexing] = useState(false);
+  const [confirmDelete, setConfirmDelete] = useState<{ id: string; title: string } | null>(null);
+  const pressTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
-  async function onReindex() {
+  function startPress(l: { id: string; title: string }) {
+    if (pressTimer.current) clearTimeout(pressTimer.current);
+    pressTimer.current = setTimeout(() => {
+      // Haptic feedback if available
+      if (typeof navigator !== "undefined" && "vibrate" in navigator) navigator.vibrate?.(30);
+      setConfirmDelete({ id: l.id, title: l.title });
+    }, 500);
+  }
+  function cancelPress() {
+    if (pressTimer.current) {
+      clearTimeout(pressTimer.current);
+      pressTimer.current = null;
+    }
+  }
     setReindexing(true);
     try {
       const r: any = await algReindex({});
