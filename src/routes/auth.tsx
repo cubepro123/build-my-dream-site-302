@@ -8,42 +8,37 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { sendSignupOtp, verifySignupOtp } from "@/lib/otp.functions";
+import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — souqss" }] }),
   component: AuthPage,
 });
 
+type Pending = { email: string; password: string } | null;
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [loading, setLoading] = useState(false);
-  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
-  const [checking, setChecking] = useState(false);
-  const pollRef = useRef<number | null>(null);
+  const [pending, setPending] = useState<Pending>(null);
+  const [code, setCode] = useState("");
+  const [verifying, setVerifying] = useState(false);
+  const [resendIn, setResendIn] = useState(0);
+  const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (user) navigate({ to: "/" });
   }, [user, navigate]);
 
-  // Auto-poll for email confirmation while waiting
   useEffect(() => {
-    if (!pendingEmail) return;
-    let cancelled = false;
-    const tick = async () => {
-      const { data } = await supabase.auth.refreshSession();
-      if (cancelled) return;
-      if (data.session) {
-        toast.success("Email confirmed — welcome!");
-        navigate({ to: "/" });
-      }
-    };
-    pollRef.current = window.setInterval(tick, 3000) as unknown as number;
+    if (resendIn <= 0) return;
+    tickRef.current = window.setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000) as unknown as number;
     return () => {
-      cancelled = true;
-      if (pollRef.current) window.clearInterval(pollRef.current);
+      if (tickRef.current) window.clearInterval(tickRef.current);
     };
-  }, [pendingEmail, navigate]);
+  }, [resendIn]);
 
   async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -62,12 +57,13 @@ function AuthPage() {
   async function signUp(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const f = new FormData(e.currentTarget);
-    const email = String(f.get("email"));
+    const email = String(f.get("email")).trim();
+    const password = String(f.get("password"));
     const fullName = String(f.get("full_name"));
     setLoading(true);
     const { data, error } = await supabase.auth.signUp({
       email,
-      password: String(f.get("password")),
+      password,
       options: {
         emailRedirectTo: window.location.origin,
         data: {
@@ -77,47 +73,85 @@ function AuthPage() {
         },
       },
     });
-    setLoading(false);
-    if (error) return toast.error(error.message);
+    if (error) {
+      setLoading(false);
+      return toast.error(error.message);
+    }
     if (data.session) {
-      // Auto-confirm is on — straight in
-      toast.success("Account created — you're signed in!");
+      // Auto-confirm enabled — just go in
+      setLoading(false);
+      toast.success("Account created!");
       navigate({ to: "/" });
       return;
     }
-    // Email confirmation required
-    setPendingEmail(email);
+    // Send our own 6-digit code via Resend
+    try {
+      const res = await sendSignupOtp({ data: { email } });
+      setLoading(false);
+      if (!res.ok && res.cooldownMs) {
+        setResendIn(Math.ceil(res.cooldownMs / 1000));
+      } else {
+        setResendIn(30);
+      }
+      setPending({ email, password });
+      setCode("");
+      toast.success("We sent you a 6-digit code");
+    } catch (err: any) {
+      setLoading(false);
+      toast.error(err?.message ?? "Couldn't send confirmation code");
+    }
   }
 
-  async function checkConfirmed() {
-    setChecking(true);
-    // Pull the latest session state from storage in case another tab confirmed
-    const { data: sData } = await supabase.auth.getSession();
-    if (sData.session) {
-      toast.success("Email confirmed — welcome!");
+  async function submitCode(value?: string) {
+    if (!pending) return;
+    const c = (value ?? code).trim();
+    if (!/^\d{6}$/.test(c)) return;
+    setVerifying(true);
+    try {
+      const res = await verifySignupOtp({ data: { email: pending.email, code: c } });
+      if (!res.ok) {
+        setVerifying(false);
+        const msg: Record<string, string> = {
+          wrong_code: "Wrong code. Try again.",
+          expired: "Code expired. Tap resend.",
+          already_used: "Code already used.",
+          too_many_attempts: "Too many tries. Tap resend.",
+          no_code: "Send a new code first.",
+          no_user: "Account not found. Sign up again.",
+        };
+        toast.error(msg[res.reason] ?? "Couldn't verify code");
+        setCode("");
+        return;
+      }
+      // Confirmed — now sign in
+      const { error: siErr } = await supabase.auth.signInWithPassword({
+        email: pending.email,
+        password: pending.password,
+      });
+      setVerifying(false);
+      if (siErr) return toast.error(siErr.message);
+      toast.success("Welcome to souqss!");
       navigate({ to: "/" });
-      return;
+    } catch (err: any) {
+      setVerifying(false);
+      toast.error(err?.message ?? "Verification failed");
     }
-    // Force refresh in case Supabase has a fresh token but state is stale
-    const { data: refreshed } = await supabase.auth.refreshSession();
-    setChecking(false);
-    if (refreshed.session) {
-      toast.success("Email confirmed — welcome!");
-      navigate({ to: "/" });
-      return;
-    }
-    toast.error("Still not confirmed. Open the email and tap the confirm link.");
   }
 
-  async function resendConfirmation() {
-    if (!pendingEmail) return;
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: pendingEmail,
-      options: { emailRedirectTo: window.location.origin },
-    });
-    if (error) return toast.error(error.message);
-    toast.success("Confirmation email resent");
+  async function resendCode() {
+    if (!pending || resendIn > 0) return;
+    try {
+      const res = await sendSignupOtp({ data: { email: pending.email } });
+      if (!res.ok && res.cooldownMs) {
+        setResendIn(Math.ceil(res.cooldownMs / 1000));
+        toast.info("Please wait a moment before resending");
+      } else {
+        setResendIn(30);
+        toast.success("New code sent");
+      }
+    } catch (err: any) {
+      toast.error(err?.message ?? "Couldn't resend");
+    }
   }
 
   return (
@@ -133,38 +167,65 @@ function AuthPage() {
           </span>
         </Link>
 
-        {pendingEmail ? (
+        {pending ? (
           <div className="space-y-5 pt-2 text-center">
             <div className="relative mx-auto h-20 w-20">
-              <div className="absolute inset-0 rounded-full border-2 border-[color:var(--ss-green)]/20" />
-              <Loader2 className="absolute inset-0 m-auto h-20 w-20 animate-spin text-[color:var(--ss-green)]" strokeWidth={1.25} />
+              {verifying ? (
+                <Loader2 className="absolute inset-0 m-auto h-20 w-20 animate-spin text-[color:var(--ss-green)]" strokeWidth={1.25} />
+              ) : (
+                <div className="absolute inset-0 rounded-full border-2 border-[color:var(--ss-green)]/20" />
+              )}
               <MailCheck className="absolute inset-0 m-auto h-8 w-8 text-[color:var(--ss-green)]" />
             </div>
             <div>
               <h2 className="text-xl font-bold">Confirm your email</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                We sent a confirmation link to <span className="font-semibold text-foreground">{pendingEmail}</span>.
-                Open it and we'll sign you in automatically.
+                We sent a 6-digit code to <span className="font-semibold text-foreground">{pending.email}</span>.
               </p>
             </div>
+            <div className="flex justify-center">
+              <InputOTP
+                maxLength={6}
+                value={code}
+                onChange={(v) => {
+                  setCode(v);
+                  if (v.length === 6) submitCode(v);
+                }}
+                disabled={verifying}
+              >
+                <InputOTPGroup>
+                  <InputOTPSlot index={0} />
+                  <InputOTPSlot index={1} />
+                  <InputOTPSlot index={2} />
+                  <InputOTPSlot index={3} />
+                  <InputOTPSlot index={4} />
+                  <InputOTPSlot index={5} />
+                </InputOTPGroup>
+              </InputOTP>
+            </div>
             <Button
-              onClick={checkConfirmed}
-              disabled={checking}
-              variant="outline"
-              className="w-full"
+              onClick={() => submitCode()}
+              disabled={verifying || code.length !== 6}
+              className="w-full bg-[color:var(--ss-green)] hover:opacity-90"
             >
-              {checking ? "Checking…" : "I confirmed my email"}
+              {verifying ? "Verifying…" : "Confirm & sign in"}
             </Button>
             <div className="flex items-center justify-center gap-2 text-xs">
               <button
-                onClick={resendConfirmation}
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-[color:var(--ss-blue)] hover:underline"
+                type="button"
+                onClick={resendCode}
+                disabled={resendIn > 0}
+                className="inline-flex items-center gap-1 text-muted-foreground hover:text-[color:var(--ss-blue)] hover:underline disabled:opacity-50 disabled:no-underline"
               >
-                <RefreshCw className="h-3 w-3" /> Resend email
+                <RefreshCw className="h-3 w-3" /> {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
               </button>
               <span className="text-muted-foreground">·</span>
               <button
-                onClick={() => setPendingEmail(null)}
+                type="button"
+                onClick={() => {
+                  setPending(null);
+                  setCode("");
+                }}
                 className="text-muted-foreground hover:text-[color:var(--ss-blue)] hover:underline"
               >
                 Use a different email
