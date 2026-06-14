@@ -20,10 +20,30 @@ function AuthPage() {
   const [loading, setLoading] = useState(false);
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [checking, setChecking] = useState(false);
+  const pollRef = useRef<number | null>(null);
 
   useEffect(() => {
     if (user) navigate({ to: "/" });
   }, [user, navigate]);
+
+  // Auto-poll for email confirmation while waiting
+  useEffect(() => {
+    if (!pendingEmail) return;
+    let cancelled = false;
+    const tick = async () => {
+      const { data } = await supabase.auth.refreshSession();
+      if (cancelled) return;
+      if (data.session) {
+        toast.success("Email confirmed — welcome!");
+        navigate({ to: "/" });
+      }
+    };
+    pollRef.current = window.setInterval(tick, 3000) as unknown as number;
+    return () => {
+      cancelled = true;
+      if (pollRef.current) window.clearInterval(pollRef.current);
+    };
+  }, [pendingEmail, navigate]);
 
   async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
