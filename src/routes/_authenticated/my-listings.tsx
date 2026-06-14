@@ -4,12 +4,22 @@ import { toast } from "sonner";
 import { Trash2, Eye, Pencil, Plus, ImageOff } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice, timeAgo } from "@/lib/format";
 import { useServerFn } from "@tanstack/react-start";
 import { deleteListingFromIndex, reindexAllListings } from "@/lib/algolia.functions";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 export const Route = createFileRoute("/_authenticated/my-listings")({
   head: () => ({ meta: [{ title: "My listings — souqss" }] }),
