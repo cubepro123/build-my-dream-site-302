@@ -112,11 +112,23 @@ function MyListings() {
           ) : rows.map((l: any) => {
             const isSold = l.status && l.status !== "active";
             return (
-              <div key={l.id} className="overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow-card)]">
+              <div
+                key={l.id}
+                onTouchStart={() => startPress(l)}
+                onTouchEnd={cancelPress}
+                onTouchMove={cancelPress}
+                onTouchCancel={cancelPress}
+                onContextMenu={(e) => {
+                  // Desktop right-click also opens the delete prompt for parity
+                  e.preventDefault();
+                  setConfirmDelete({ id: l.id, title: l.title });
+                }}
+                className="overflow-hidden rounded-2xl border bg-card shadow-[var(--shadow-card)] select-none [-webkit-touch-callout:none]"
+              >
                 <div className="flex gap-3 p-3">
                   <Link to="/listings/$id" params={{ id: l.id }} className="relative h-20 w-20 shrink-0 overflow-hidden rounded-xl bg-muted sm:h-24 sm:w-24">
                     {l.images?.[0] ? (
-                      <img src={l.images[0]} alt="" className="h-full w-full object-cover" />
+                      <img src={l.images[0]} alt="" className="h-full w-full object-cover pointer-events-none" draggable={false} />
                     ) : (
                       <div className="grid h-full w-full place-items-center text-muted-foreground"><ImageOff className="h-5 w-5" /></div>
                     )}
@@ -131,7 +143,7 @@ function MyListings() {
                       </Link>
                       <p className="mt-0.5 truncate text-sm font-bold text-[color:var(--ss-green)]">{formatPrice(l.price, l.currency)}</p>
                     </div>
-                    <p className="truncate text-[11px] text-muted-foreground sm:text-xs">{l.location} • {timeAgo(l.created_at)}</p>
+                    <p className="truncate text-[11px] text-muted-foreground sm:text-xs">{l.location} • {timeAgo(l.created_at)} · <span className="text-muted-foreground/80">long-press to delete</span></p>
                   </div>
                 </div>
                 <div className="grid grid-cols-3 border-t bg-muted/30 text-sm">
@@ -141,7 +153,7 @@ function MyListings() {
                   <Link to="/edit/$id" params={{ id: l.id }} className="flex items-center justify-center gap-1.5 border-x py-2.5 font-medium text-[color:var(--ss-blue)] hover:bg-muted">
                     <Pencil className="h-4 w-4" /> Edit
                   </Link>
-                  <button onClick={() => del(l.id)} className="flex items-center justify-center gap-1.5 py-2.5 font-medium text-[color:var(--ss-red)] hover:bg-[color:var(--ss-red)]/5">
+                  <button onClick={() => setConfirmDelete({ id: l.id, title: l.title })} className="flex items-center justify-center gap-1.5 py-2.5 font-medium text-[color:var(--ss-red)] hover:bg-[color:var(--ss-red)]/5">
                     <Trash2 className="h-4 w-4" /> Delete
                   </button>
                 </div>
