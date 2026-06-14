@@ -21,7 +21,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(s);
       if (event === "SIGNED_IN" && s) {
         // Fire-and-forget; server fn dedupes via profiles.welcomed_at
-        claimWelcomeEmail({}).catch((err) => console.warn("welcome email claim failed", err));
+        claimWelcomeEmail().catch((err) => console.warn("welcome email claim failed", err));
       }
     });
     supabase.auth.getSession().then(({ data }) => {
