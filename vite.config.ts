@@ -12,4 +12,8 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // Force-enable the nitro deploy plugin even outside the Lovable sandbox so
+  // `bun run build` always emits dist/server/wrangler.json + dist/client for
+  // direct `wrangler deploy` usage on a personal Cloudflare account.
+  nitro: true,
 });
