@@ -79,7 +79,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
     meta: [
       { charSet: "utf-8" },
       { name: "viewport", content: "width=device-width, initial-scale=1" },
-      { title: "souqss — South Sudan Marketplace" },
+      { title: "souqss · South Sudan Marketplace" },
       { name: "description", content: "Buy and sell anything in South Sudan. Post free ads, message sellers, or contact them on WhatsApp." },
       { property: "og:title", content: "souqss — South Sudan Marketplace" },
       { property: "og:description", content: "Buy and sell anything in South Sudan. Post free ads, message sellers, or contact them on WhatsApp." },
