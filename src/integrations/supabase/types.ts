@@ -200,6 +200,7 @@ export type Database = {
           shop_slug: string | null
           shop_type: string | null
           updated_at: string
+          welcomed_at: string | null
           whatsapp: string | null
         }
         Insert: {
@@ -219,6 +220,7 @@ export type Database = {
           shop_slug?: string | null
           shop_type?: string | null
           updated_at?: string
+          welcomed_at?: string | null
           whatsapp?: string | null
         }
         Update: {
@@ -238,6 +240,7 @@ export type Database = {
           shop_slug?: string | null
           shop_type?: string | null
           updated_at?: string
+          welcomed_at?: string | null
           whatsapp?: string | null
         }
         Relationships: []

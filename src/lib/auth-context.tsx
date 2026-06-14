@@ -1,6 +1,7 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from "react";
 import type { Session, User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { claimWelcomeEmail } from "@/lib/email.functions";
 
 interface AuthCtx {
   user: User | null;
@@ -16,8 +17,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => {
+    const { data: sub } = supabase.auth.onAuthStateChange((event, s) => {
       setSession(s);
+      if (event === "SIGNED_IN" && s) {
+        // Fire-and-forget; server fn dedupes via profiles.welcomed_at
+        claimWelcomeEmail().catch((err) => console.warn("welcome email claim failed", err));
+      }
     });
     supabase.auth.getSession().then(({ data }) => {
       setSession(data.session);
