@@ -1,0 +1,1 @@
+ALTER TABLE public.profiles ADD COLUMN IF NOT EXISTS shop_type TEXT CHECK (shop_type IN ('marketplace','services'));

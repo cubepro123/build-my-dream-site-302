@@ -1,0 +1,14 @@
+{
+  "name": "souqss — South Sudan Marketplace",
+  "short_name": "souqss",
+  "description": "Buy and sell anything in South Sudan.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f6f8fb",
+  "theme_color": "#16a34a",
+  "icons": [
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
