@@ -76,7 +76,6 @@ function MyListings() {
   });
 
   async function del(id: string) {
-    if (!confirm("Delete this listing?")) return;
     const { error } = await supabase.from("listings").delete().eq("id", id);
     if (error) return toast.error(error.message);
     algDelete({ data: { id } }).catch((err) => console.warn("algolia delete failed", err));
