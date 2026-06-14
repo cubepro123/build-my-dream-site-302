@@ -32,8 +32,8 @@ function AuthPage() {
   const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (user) navigate({ to: "/" });
-  }, [user, navigate]);
+    if (user && !pending && !loading) navigate({ to: "/" });
+  }, [user, pending, loading, navigate]);
 
   useEffect(() => {
     if (resendIn <= 0) return;
@@ -80,13 +80,7 @@ function AuthPage() {
       setLoading(false);
       return toast.error(error.message);
     }
-    if (data.session) {
-      // Auto-confirm enabled — just go in
-      setLoading(false);
-      toast.success("Account created!");
-      navigate({ to: "/" });
-      return;
-    }
+    if (data.session) await supabase.auth.signOut();
     // Send our own 6-digit code via Resend
     try {
       const res = await sendSignupOtpFn({ data: { email } });
