@@ -49,6 +49,8 @@ function MyListings() {
       pressTimer.current = null;
     }
   }
+
+  async function onReindex() {
     setReindexing(true);
     try {
       const r: any = await algReindex({});
