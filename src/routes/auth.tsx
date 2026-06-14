@@ -134,21 +134,24 @@ function AuthPage() {
         </Link>
 
         {pendingEmail ? (
-          <div className="space-y-4 pt-2 text-center">
-            <div className="mx-auto grid h-14 w-14 place-items-center rounded-full bg-[color:var(--ss-green)]/10 text-[color:var(--ss-green)]">
-              <MailCheck className="h-7 w-7" />
+          <div className="space-y-5 pt-2 text-center">
+            <div className="relative mx-auto h-20 w-20">
+              <div className="absolute inset-0 rounded-full border-2 border-[color:var(--ss-green)]/20" />
+              <Loader2 className="absolute inset-0 m-auto h-20 w-20 animate-spin text-[color:var(--ss-green)]" strokeWidth={1.25} />
+              <MailCheck className="absolute inset-0 m-auto h-8 w-8 text-[color:var(--ss-green)]" />
             </div>
             <div>
               <h2 className="text-xl font-bold">Confirm your email</h2>
               <p className="mt-1 text-sm text-muted-foreground">
-                We just sent a confirmation link to <span className="font-semibold text-foreground">{pendingEmail}</span>.
-                Tap the link, then come back here.
+                We sent a confirmation link to <span className="font-semibold text-foreground">{pendingEmail}</span>.
+                Open it and we'll sign you in automatically.
               </p>
             </div>
             <Button
               onClick={checkConfirmed}
               disabled={checking}
-              className="w-full bg-[color:var(--ss-green)] hover:opacity-90"
+              variant="outline"
+              className="w-full"
             >
               {checking ? "Checking…" : "I confirmed my email"}
             </Button>
