@@ -76,6 +76,48 @@ export const sendWelcomeEmail = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+export const claimWelcomeEmail = createServerFn({ method: "POST" })
+  .middleware([requireSupabaseAuth])
+  .handler(async ({ context }) => {
+    const { supabase, userId, claims } = context as any;
+    const email = (claims?.email as string | undefined) ?? undefined;
+    if (!email) return { sent: false };
+    const { data: prof } = await supabase
+      .from("profiles")
+      .select("welcomed_at, full_name")
+      .eq("id", userId)
+      .maybeSingle();
+    if (!prof || prof.welcomed_at) return { sent: false };
+    // Mark first so concurrent sign-ins don't duplicate
+    const { error: upErr, data: updated } = await supabase
+      .from("profiles")
+      .update({ welcomed_at: new Date().toISOString() })
+      .eq("id", userId)
+      .is("welcomed_at", null)
+      .select("id");
+    if (upErr || !updated || updated.length === 0) return { sent: false };
+    const first = (prof.full_name ?? "there").split(/\s+/)[0];
+    try {
+      await sendEmail({
+        to: email,
+        subject: "Welcome to souqss 🎉",
+        html: shell(
+          `Welcome, ${escapeHtml(first)}!`,
+          `<p style="margin:0 0 14px;line-height:1.55">Your souqss account is ready. You can now post listings, chat with buyers and sellers, and book services across South Sudan.</p>
+           <p style="margin:0 0 18px;line-height:1.55">Tap below to post your first ad — it's free.</p>
+           <p style="margin:0 0 18px"><a href="https://south-sudans-marketplace.lovable.app/sell" style="display:inline-block;background:#0a8754;color:#fff;text-decoration:none;padding:12px 22px;border-radius:10px;font-weight:600">Post a free ad</a></p>
+           <p style="margin:0;color:#64748b;font-size:13px">Reply to this email if you need help.</p>`,
+        ),
+      });
+      return { sent: true };
+    } catch (err) {
+      console.warn("welcome email send failed", err);
+      // Roll back the flag so we can try again on the next sign-in
+      await supabase.from("profiles").update({ welcomed_at: null }).eq("id", userId);
+      return { sent: false, error: String(err) };
+    }
+  });
+
 export const sendContactEmail = createServerFn({ method: "POST" })
   .inputValidator(z.object({
     name: z.string().min(1).max(120),
