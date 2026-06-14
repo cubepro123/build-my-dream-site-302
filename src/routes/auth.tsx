@@ -77,6 +77,20 @@ function AuthPage() {
       },
     });
     if (error) {
+      if (error.message.toLowerCase().includes("already registered")) {
+        try {
+          const res = await sendSignupOtpFn({ data: { email } });
+          setLoading(false);
+          setResendIn(res.ok ? 30 : Math.ceil((res.cooldownMs ?? 30_000) / 1000));
+          setPending({ email, password });
+          setCode("");
+          toast.success("We sent you a 6-digit code");
+          return;
+        } catch (err: any) {
+          setLoading(false);
+          return toast.error(err?.message ?? "Couldn't send confirmation code");
+        }
+      }
       setLoading(false);
       return toast.error(error.message);
     }
