@@ -167,6 +167,29 @@ function MyListings() {
       <Link to="/sell" className="fixed bottom-5 right-5 z-30 inline-flex items-center gap-1.5 rounded-full bg-[color:var(--ss-green)] px-4 py-3 text-sm font-semibold text-white shadow-lg hover:opacity-95 sm:hidden">
         <Plus className="h-5 w-5" /> New
       </Link>
+
+      <AlertDialog open={!!confirmDelete} onOpenChange={(o) => !o && setConfirmDelete(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete this listing?</AlertDialogTitle>
+            <AlertDialogDescription>
+              "{confirmDelete?.title}" will be permanently removed. This can't be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={async () => {
+                if (confirmDelete) await del(confirmDelete.id);
+                setConfirmDelete(null);
+              }}
+              className="bg-[color:var(--ss-red)] hover:opacity-90"
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
