@@ -25,15 +25,18 @@ async function sendOtpEmail(to: string, code: string) {
   const html = `<!doctype html><html><body style="margin:0;padding:0;background:#f5f7fa;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;color:#0f172a">
   <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:#f5f7fa;padding:32px 0"><tr><td align="center">
     <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#fff;border-radius:16px;overflow:hidden;box-shadow:0 6px 24px rgba(15,23,42,.08)">
-      <tr><td style="background:linear-gradient(135deg,#0a8754,#1f6feb);padding:24px 28px;color:#fff">
-        <div style="font-size:22px;font-weight:800">souq<span style="color:#fbbf24">ss</span></div>
-        <div style="font-size:13px;opacity:.85;margin-top:2px">South Sudan's Marketplace 🇸🇸</div>
+      <tr><td style="background:linear-gradient(135deg,#0a8754 0%,#1f6feb 100%);padding:28px;color:#fff;text-align:center">
+        <div style="font-size:26px;font-weight:800;letter-spacing:-.01em">souq<span style="color:#fbbf24">ss</span></div>
+        <div style="font-size:13px;opacity:.9;margin-top:4px">South Sudan's Marketplace 🇸🇸</div>
       </td></tr>
-      <tr><td style="padding:28px;text-align:center">
-        <h1 style="margin:0 0 8px;font-size:20px">Confirm your email</h1>
-        <p style="margin:0 0 18px;color:#475569;font-size:14px">Enter this 6-digit code in the app to finish creating your account. It expires in 10 minutes.</p>
-        <div style="display:inline-block;padding:14px 22px;background:#f1f5f9;border-radius:12px;font-size:32px;font-weight:800;letter-spacing:10px;color:#0a8754;font-family:'SF Mono',Menlo,monospace">${code}</div>
-        <p style="margin:18px 0 0;color:#64748b;font-size:12px">If you didn't ask for this, you can ignore this email.</p>
+      <tr><td style="padding:32px 28px;text-align:center">
+        <h1 style="margin:0 0 8px;font-size:22px;color:#0f172a">Confirm your email</h1>
+        <p style="margin:0 0 22px;color:#475569;font-size:14px;line-height:1.55">Enter this 6-digit code in souqss to finish creating your account. It expires in 10 minutes.</p>
+        <div style="display:inline-block;padding:18px 28px;background:linear-gradient(135deg,rgba(10,135,84,.08),rgba(31,111,235,.08));border:2px solid #0a8754;border-radius:14px;font-size:36px;font-weight:800;letter-spacing:12px;color:#0a8754;font-family:'SF Mono',Menlo,Consolas,monospace">${code}</div>
+        <p style="margin:22px 0 0;color:#64748b;font-size:12px;line-height:1.5">If you didn't try to create a souqss account, you can safely ignore this email.</p>
+      </td></tr>
+      <tr><td style="padding:14px 28px;background:#f8fafc;color:#64748b;font-size:11px;text-align:center;border-top:1px solid #e2e8f0">
+        souqss · hellosouqss@gmail.com
       </td></tr>
     </table>
   </td></tr></table></body></html>`;
