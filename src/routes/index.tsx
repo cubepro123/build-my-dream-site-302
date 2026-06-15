@@ -120,7 +120,7 @@ function Home() {
               </span>
             </h1>
             <p className="mt-4 text-lg text-white/85 max-w-lg">
-              From Juba to Wau — South Sudan's everything marketplace. Post a listing in seconds, chat with buyers, or share your number on WhatsApp. ✨
+              From Juba to Wau — South Sudan&apos;s everything marketplace. Post a listing in seconds, chat with buyers, or share your number on WhatsApp. ✨
             </p>
             <form
               onSubmit={(e) => {
