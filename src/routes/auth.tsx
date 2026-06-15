@@ -57,92 +57,19 @@ function AuthPage() {
       },
     });
     if (error) {
-      if (error.message.toLowerCase().includes("already registered")) {
-        try {
-          const res = await sendSignupOtpFn({ data: { email } });
-          setLoading(false);
-          setResendIn(res.ok ? 30 : Math.ceil((res.cooldownMs ?? 30_000) / 1000));
-          setPending({ email, password });
-          setCode("");
-          toast.success("We sent you a 6-digit code");
-          return;
-        } catch (err: any) {
-          setLoading(false);
-          return toast.error(err?.message ?? "Couldn't send confirmation code");
-        }
-      }
       setLoading(false);
+      if (error.message.toLowerCase().includes("already registered")) {
+        return toast.error("That email already has an account. Sign in or use Forgot password.");
+      }
       return toast.error(error.message);
     }
-    if (data.session) await supabase.auth.signOut();
-    // Send our own 6-digit code via Resend
-    try {
-      const res = await sendSignupOtpFn({ data: { email } });
-      setLoading(false);
-      if (!res.ok && res.cooldownMs) {
-        setResendIn(Math.ceil(res.cooldownMs / 1000));
-      } else {
-        setResendIn(30);
-      }
-      setPending({ email, password });
-      setCode("");
-      toast.success("We sent you a 6-digit code");
-    } catch (err: any) {
-      setLoading(false);
-      toast.error(err?.message ?? "Couldn't send confirmation code");
-    }
-  }
-
-  async function submitCode(value?: string) {
-    if (!pending) return;
-    const c = (value ?? code).trim();
-    if (!/^\d{6}$/.test(c)) return;
-    setVerifying(true);
-    try {
-      const res = await verifySignupOtpFn({ data: { email: pending.email, code: c } });
-      if (!res.ok) {
-        setVerifying(false);
-        const msg: Record<string, string> = {
-          wrong_code: "Wrong code. Try again.",
-          expired: "Code expired. Tap resend.",
-          already_used: "Code already used.",
-          too_many_attempts: "Too many tries. Tap resend.",
-          no_code: "Send a new code first.",
-          no_user: "Account not found. Sign up again.",
-        };
-        toast.error(msg[res.reason] ?? "Couldn't verify code");
-        setCode("");
-        return;
-      }
-      // Confirmed — now sign in
-      const { error: siErr } = await supabase.auth.signInWithPassword({
-        email: pending.email,
-        password: pending.password,
-      });
-      setVerifying(false);
-      if (siErr) return toast.error(siErr.message);
+    setLoading(false);
+    if (data.session) {
       toast.success("Welcome to souqss!");
       navigate({ to: "/" });
-    } catch (err: any) {
-      setVerifying(false);
-      toast.error(err?.message ?? "Verification failed");
+      return;
     }
-  }
-
-  async function resendCode() {
-    if (!pending || resendIn > 0) return;
-    try {
-      const res = await sendSignupOtpFn({ data: { email: pending.email } });
-      if (!res.ok && res.cooldownMs) {
-        setResendIn(Math.ceil(res.cooldownMs / 1000));
-        toast.info("Please wait a moment before resending");
-      } else {
-        setResendIn(30);
-        toast.success("New code sent");
-      }
-    } catch (err: any) {
-      toast.error(err?.message ?? "Couldn't resend");
-    }
+    toast.success("Account created. Check your email to confirm it, then sign in.");
   }
 
   return (
@@ -158,74 +85,7 @@ function AuthPage() {
           </span>
         </Link>
 
-        {pending ? (
-          <div className="space-y-5 pt-2 text-center">
-            <div className="relative mx-auto h-20 w-20">
-              {verifying ? (
-                <Loader2 className="absolute inset-0 m-auto h-20 w-20 animate-spin text-[color:var(--ss-green)]" strokeWidth={1.25} />
-              ) : (
-                <div className="absolute inset-0 rounded-full border-2 border-[color:var(--ss-green)]/20" />
-              )}
-              <MailCheck className="absolute inset-0 m-auto h-8 w-8 text-[color:var(--ss-green)]" />
-            </div>
-            <div>
-              <h2 className="text-xl font-bold">Confirm your email</h2>
-              <p className="mt-1 text-sm text-muted-foreground">
-                We sent a 6-digit code to <span className="font-semibold text-foreground">{pending.email}</span>.
-              </p>
-            </div>
-            <div className="flex justify-center">
-              <InputOTP
-                maxLength={6}
-                value={code}
-                onChange={(v) => {
-                  setCode(v);
-                  if (v.length === 6) submitCode(v);
-                }}
-                disabled={verifying}
-              >
-                <InputOTPGroup>
-                  <InputOTPSlot index={0} />
-                  <InputOTPSlot index={1} />
-                  <InputOTPSlot index={2} />
-                  <InputOTPSlot index={3} />
-                  <InputOTPSlot index={4} />
-                  <InputOTPSlot index={5} />
-                </InputOTPGroup>
-              </InputOTP>
-            </div>
-            <Button
-              onClick={() => submitCode()}
-              disabled={verifying || code.length !== 6}
-              className="w-full bg-[color:var(--ss-green)] hover:opacity-90"
-            >
-              {verifying ? "Verifying…" : "Confirm & sign in"}
-            </Button>
-            <div className="flex items-center justify-center gap-2 text-xs">
-              <button
-                type="button"
-                onClick={resendCode}
-                disabled={resendIn > 0}
-                className="inline-flex items-center gap-1 text-muted-foreground hover:text-[color:var(--ss-blue)] hover:underline disabled:opacity-50 disabled:no-underline"
-              >
-                <RefreshCw className="h-3 w-3" /> {resendIn > 0 ? `Resend in ${resendIn}s` : "Resend code"}
-              </button>
-              <span className="text-muted-foreground">·</span>
-              <button
-                type="button"
-                onClick={() => {
-                  setPending(null);
-                  setCode("");
-                }}
-                className="text-muted-foreground hover:text-[color:var(--ss-blue)] hover:underline"
-              >
-                Use a different email
-              </button>
-            </div>
-            <p className="text-[11px] text-muted-foreground">Check your spam folder if you don't see it.</p>
-          </div>
-        ) : (
-          <Tabs defaultValue="signin">
+        <Tabs defaultValue="signin">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign in</TabsTrigger>
               <TabsTrigger value="signup">Create account</TabsTrigger>
@@ -277,8 +137,7 @@ function AuthPage() {
                 </Button>
               </form>
             </TabsContent>
-          </Tabs>
-        )}
+        </Tabs>
       </div>
     </div>
   );
