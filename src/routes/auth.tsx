@@ -1,6 +1,5 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState, useEffect } from "react";
-import { useServerFn } from "@tanstack/react-start";
 import { toast } from "sonner";
 import { Store, Mail, Loader2, CheckCircle2, PartyPopper } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
@@ -10,7 +9,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
-import { sendSignupOtp, verifySignupOtp } from "@/lib/otp.functions";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — souqss" }] }),
@@ -18,6 +16,24 @@ export const Route = createFileRoute("/auth")({
 });
 
 type SignupStep = "form" | "sending" | "otp" | "confirmed" | "welcome";
+
+type SignupOtpResponse = {
+  ok: boolean;
+  reason?: "invalid_request" | "server_error" | "no_code" | "already_used" | "expired" | "too_many_attempts" | "wrong_code" | "no_user";
+  cooldownMs?: number;
+  remaining?: number;
+};
+
+async function requestSignupOtp(payload: { action: "send"; email: string } | { action: "verify"; email: string; code: string }) {
+  const res = await fetch("/api/public/signup-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = (await res.json()) as SignupOtpResponse;
+  if (!res.ok) throw new Error(data.reason === "server_error" ? "Couldn't send the code" : "Invalid confirmation request");
+  return data;
+}
 
 function AuthPage() {
   const navigate = useNavigate();
@@ -32,9 +48,6 @@ function AuthPage() {
   const [code, setCode] = useState("");
   const [verifying, setVerifying] = useState(false);
   const [resending, setResending] = useState(false);
-
-  const sendOtp = useServerFn(sendSignupOtp);
-  const verifyOtp = useServerFn(verifySignupOtp);
 
   useEffect(() => {
     // Only auto-redirect signed-in users when not in the middle of the signup OTP flow
@@ -91,7 +104,7 @@ function AuthPage() {
     }
 
     try {
-      const res = await sendOtp({ data: { email } });
+      const res = await requestSignupOtp({ action: "send", email });
       if (!res.ok) {
         toast.error(`Please wait ${Math.ceil((res.cooldownMs ?? 30000) / 1000)}s before requesting another code.`);
       }
@@ -106,7 +119,7 @@ function AuthPage() {
     if (value.length !== 6 || verifying) return;
     setVerifying(true);
     try {
-      const res = await verifyOtp({ data: { email: pendingEmail, code: value } });
+      const res = await requestSignupOtp({ action: "verify", email: pendingEmail, code: value });
       if (!res.ok) {
         setVerifying(false);
         setCode("");
@@ -142,7 +155,7 @@ function AuthPage() {
     if (resending) return;
     setResending(true);
     try {
-      const res = await sendOtp({ data: { email: pendingEmail } });
+      const res = await requestSignupOtp({ action: "send", email: pendingEmail });
       if (!res.ok) {
         toast.error(`Please wait ${Math.ceil((res.cooldownMs ?? 30000) / 1000)}s before requesting another code.`);
       } else {
