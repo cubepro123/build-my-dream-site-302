@@ -13,6 +13,7 @@ import { CATEGORY_META } from "@/lib/categories";
 import { useAuth } from "@/lib/auth-context";
 import { liteClient as algoliasearch } from "algoliasearch/lite";
 import { InstallAppButton } from "@/components/InstallAppButton";
+// deploy: refresh env vars
 
 const ALG_APP = import.meta.env.VITE_LOVABLE_CONNECTOR_ALGOLIA_APPLICATION_ID;
 const ALG_KEY = import.meta.env.VITE_LOVABLE_CONNECTOR_ALGOLIA_PUBLIC_API_KEY;
