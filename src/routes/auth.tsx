@@ -17,6 +17,24 @@ export const Route = createFileRoute("/auth")({
 
 type SignupStep = "form" | "sending" | "otp" | "confirmed" | "welcome";
 
+type SignupOtpResponse = {
+  ok: boolean;
+  reason?: "invalid_request" | "server_error" | "no_code" | "already_used" | "expired" | "too_many_attempts" | "wrong_code" | "no_user";
+  cooldownMs?: number;
+  remaining?: number;
+};
+
+async function requestSignupOtp(payload: { action: "send"; email: string } | { action: "verify"; email: string; code: string }) {
+  const res = await fetch("/api/public/signup-otp", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(payload),
+  });
+  const data = (await res.json()) as SignupOtpResponse;
+  if (!res.ok) throw new Error(data.reason === "server_error" ? "Couldn't send the code" : "Invalid confirmation request");
+  return data;
+}
+
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
