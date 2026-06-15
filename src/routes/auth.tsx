@@ -1,47 +1,27 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
-import { useServerFn } from "@tanstack/react-start";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { Store, MailCheck, RefreshCw, Loader2 } from "lucide-react";
+import { Store } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { sendSignupOtp, verifySignupOtp } from "@/lib/otp.functions";
-import { InputOTP, InputOTPGroup, InputOTPSlot } from "@/components/ui/input-otp";
 
 export const Route = createFileRoute("/auth")({
   head: () => ({ meta: [{ title: "Sign in — souqss" }] }),
   component: AuthPage,
 });
 
-type Pending = { email: string; password: string } | null;
-
 function AuthPage() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const sendSignupOtpFn = useServerFn(sendSignupOtp);
-  const verifySignupOtpFn = useServerFn(verifySignupOtp);
   const [loading, setLoading] = useState(false);
-  const [pending, setPending] = useState<Pending>(null);
-  const [code, setCode] = useState("");
-  const [verifying, setVerifying] = useState(false);
-  const [resendIn, setResendIn] = useState(0);
-  const tickRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (user && !pending && !loading) navigate({ to: "/" });
-  }, [user, pending, loading, navigate]);
-
-  useEffect(() => {
-    if (resendIn <= 0) return;
-    tickRef.current = window.setInterval(() => setResendIn((s) => Math.max(0, s - 1)), 1000) as unknown as number;
-    return () => {
-      if (tickRef.current) window.clearInterval(tickRef.current);
-    };
-  }, [resendIn]);
+    if (user && !loading) navigate({ to: "/" });
+  }, [user, loading, navigate]);
 
   async function signIn(e: React.FormEvent<HTMLFormElement>) {
     e.preventDefault();
