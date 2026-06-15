@@ -115,7 +115,7 @@ function Home() {
               <Sparkles className="mr-1 h-3 w-3" /> Made for South Sudan 🇸🇸
             </Badge>
             <h1 className="text-4xl md:text-6xl font-extrabold leading-tight tracking-tight animate-fade-in">
-              <span className="text-yellow-400">Find</span> anything. <br />
+              <span>Find</span> anything. <br />
               <span className="bg-gradient-to-r from-[color:var(--ss-gold)] via-amber-200 to-[color:var(--ss-gold)] bg-clip-text text-transparent bg-[length:200%_auto] animate-shimmer">
                 Sell everything.
               </span>
