@@ -25,7 +25,6 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
-import { Route as ApiPublicSignupOtpRouteImport } from './routes/api/public/signup-otp'
 import { Route as AuthenticatedMessagesIdRouteImport } from './routes/_authenticated/messages.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated/edit.$id'
 
@@ -108,11 +107,6 @@ const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
-const ApiPublicSignupOtpRoute = ApiPublicSignupOtpRouteImport.update({
-  id: '/api/public/signup-otp',
-  path: '/api/public/signup-otp',
-  getParentRoute: () => rootRouteImport,
-} as any)
 const AuthenticatedMessagesIdRoute = AuthenticatedMessagesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -142,7 +136,6 @@ export interface FileRoutesByFullPath {
   '/shop/$id': typeof ShopIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/messages/$id': typeof AuthenticatedMessagesIdRoute
-  '/api/public/signup-otp': typeof ApiPublicSignupOtpRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -162,7 +155,6 @@ export interface FileRoutesByTo {
   '/shop/$id': typeof ShopIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/messages/$id': typeof AuthenticatedMessagesIdRoute
-  '/api/public/signup-otp': typeof ApiPublicSignupOtpRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -184,7 +176,6 @@ export interface FileRoutesById {
   '/shop/$id': typeof ShopIdRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/messages/$id': typeof AuthenticatedMessagesIdRoute
-  '/api/public/signup-otp': typeof ApiPublicSignupOtpRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -206,7 +197,6 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/edit/$id'
     | '/messages/$id'
-    | '/api/public/signup-otp'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -226,7 +216,6 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/edit/$id'
     | '/messages/$id'
-    | '/api/public/signup-otp'
   id:
     | '__root__'
     | '/'
@@ -247,7 +236,6 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/_authenticated/edit/$id'
     | '/_authenticated/messages/$id'
-    | '/api/public/signup-otp'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -262,7 +250,6 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ListingsIdRoute: typeof ListingsIdRoute
   ShopIdRoute: typeof ShopIdRoute
-  ApiPublicSignupOtpRoute: typeof ApiPublicSignupOtpRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -379,13 +366,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
-    '/api/public/signup-otp': {
-      id: '/api/public/signup-otp'
-      path: '/api/public/signup-otp'
-      fullPath: '/api/public/signup-otp'
-      preLoaderRoute: typeof ApiPublicSignupOtpRouteImport
-      parentRoute: typeof rootRouteImport
-    }
     '/_authenticated/messages/$id': {
       id: '/_authenticated/messages/$id'
       path: '/$id'
@@ -449,7 +429,6 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ListingsIdRoute: ListingsIdRoute,
   ShopIdRoute: ShopIdRoute,
-  ApiPublicSignupOtpRoute: ApiPublicSignupOtpRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
