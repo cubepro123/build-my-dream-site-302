@@ -48,24 +48,28 @@ function AuthPage() {
     const f = new FormData(e.currentTarget);
     const email = String(f.get("email")).trim().toLowerCase();
     setLoading(true);
-    const { error } = await supabase.auth.signUp({
-      email,
-      password: String(f.get("password")),
-      options: {
-        emailRedirectTo: `${window.location.origin}/`,
-        data: {
+    try {
+      const res = await fetch("/api/public/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password: String(f.get("password")),
           full_name: String(f.get("full_name")),
           phone: String(f.get("phone") || ""),
           whatsapp: String(f.get("whatsapp") || ""),
-        },
-      },
-    });
-    // Kill any auto-created session so nobody enters without confirming.
-    await supabase.auth.signOut();
-    setLoading(false);
-
-    if (error) return toast.error(error.message);
-    setSentTo(email);
+          redirectTo: `${window.location.origin}/`,
+        }),
+      });
+      const data = await res.json().catch(() => ({}));
+      await supabase.auth.signOut();
+      setLoading(false);
+      if (!res.ok) return toast.error(data?.error || "Could not create account");
+      setSentTo(email);
+    } catch {
+      setLoading(false);
+      toast.error("Network error. Try again.");
+    }
   }
 
   return (
