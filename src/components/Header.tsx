@@ -1,6 +1,7 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, MessageCircle, PlusCircle, Search, Store, User as UserIcon, LogOut } from "lucide-react";
+import { Heart, MessageCircle, PlusCircle, Search, Store, User as UserIcon, LogOut, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/lib/auth-context";
+import { useIsAdmin } from "@/hooks/use-feature-flags";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +14,7 @@ import {
 export function Header() {
   const { user, signOut } = useAuth();
   const navigate = useNavigate();
+  const { data: isAdmin } = useIsAdmin();
 
   return (
     <header className="sticky top-0 z-40 border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
@@ -69,6 +71,11 @@ export function Header() {
                   <DropdownMenuItem onClick={() => navigate({ to: "/profile" })}>
                     Profile
                   </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem onClick={() => navigate({ to: "/admin" })}>
+                      <ShieldCheck className="mr-2 h-4 w-4" /> Admin dashboard
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem
                     onClick={async () => {

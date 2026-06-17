@@ -71,7 +71,7 @@ function Home() {
           seller_id: h.seller_id,
         }));
       }
-      const cols = "id,title,price,currency,location,images,created_at,category,seller_id";
+      const cols = "id,title,price,currency,location,images,created_at,category,seller_id,boost_status,boost_expires_at";
       let query = supabase
         .from("listings")
         .select(cols)

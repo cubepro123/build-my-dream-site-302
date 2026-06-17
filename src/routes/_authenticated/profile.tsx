@@ -2,7 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Store, Briefcase, ShoppingBag, ExternalLink, Pencil, Upload, Loader2 } from "lucide-react";
+import { Store, Briefcase, ShoppingBag, ExternalLink, Pencil, Upload, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { MapPicker } from "@/components/MapPicker";
+import { requestAccountDeletion } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — souqss" }] }),
@@ -26,6 +27,9 @@ const SHOP_TYPE_LABEL: Record<ShopType, { name: string; desc: string; icon: type
 function ProfilePage() {
   const { user } = useAuth();
   const qc = useQueryClient();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteSending, setDeleteSending] = useState(false);
+  const [deleteSent, setDeleteSent] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
@@ -254,7 +258,67 @@ function ProfilePage() {
             </div>
           )}
         </section>
+
+        {/* Danger zone */}
+        <section className="mt-10 rounded-2xl border border-red-200 bg-red-50/50 p-5">
+          <div className="flex items-start gap-3">
+            <div className="grid h-10 w-10 shrink-0 place-items-center rounded-full bg-red-100 text-red-600">
+              <AlertTriangle className="h-5 w-5" />
+            </div>
+            <div className="min-w-0 flex-1">
+              <h3 className="font-semibold text-red-900">Delete account</h3>
+              <p className="mt-0.5 text-xs text-red-700/80">Permanently erase your profile, listings, messages and ratings. We'll email you a confirmation link.</p>
+              <Button
+                onClick={() => setDeleteOpen(true)}
+                variant="outline"
+                className="mt-3 border-red-300 text-red-700 hover:bg-red-100 hover:text-red-800"
+              >
+                <Trash2 className="mr-1 h-4 w-4" /> Delete my account
+              </Button>
+            </div>
+          </div>
+        </section>
       </main>
+
+      <Dialog open={deleteOpen} onOpenChange={(o) => { setDeleteOpen(o); if (!o) setDeleteSent(false); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle className="text-red-700">Delete account?</DialogTitle>
+            <DialogDescription>
+              {deleteSent
+                ? "Check your inbox — we sent you a confirmation link. It expires in 1 hour."
+                : "We'll send a confirmation link to your email. Clicking it will permanently erase your account and all data. This cannot be undone."}
+            </DialogDescription>
+          </DialogHeader>
+          {!deleteSent && (
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setDeleteOpen(false)} disabled={deleteSending}>Cancel</Button>
+              <Button
+                className="bg-red-600 hover:bg-red-700"
+                disabled={deleteSending}
+                onClick={async () => {
+                  setDeleteSending(true);
+                  try {
+                    await requestAccountDeletion();
+                    setDeleteSent(true);
+                    toast.success("Confirmation email sent");
+                  } catch (e: any) {
+                    toast.error(e.message ?? "Could not send email");
+                  } finally { setDeleteSending(false); }
+                }}
+              >
+                {deleteSending ? <><Loader2 className="mr-1 h-4 w-4 animate-spin" /> Sending…</> : "Send confirmation email"}
+              </Button>
+            </DialogFooter>
+          )}
+          {deleteSent && (
+            <DialogFooter>
+              <Button onClick={() => setDeleteOpen(false)}>Got it</Button>
+            </DialogFooter>
+          )}
+        </DialogContent>
+      </Dialog>
+
 
       <Dialog open={shopOpen} onOpenChange={(o) => { setShopOpen(o); if (!o) setCreateStep("type"); }}>
         <DialogContent className="sm:max-w-md">

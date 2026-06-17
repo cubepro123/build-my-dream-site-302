@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MapPin, PhoneCall, MessageCircle, ArrowLeft, ShieldCheck, ChevronLeft, ChevronRight, Share2, Store, ChevronDown, ChevronUp, Flag, Camera, User, Pencil, Trash2, CalendarCheck } from "lucide-react";
+import { MapPin, PhoneCall, MessageCircle, ArrowLeft, ShieldCheck, ChevronLeft, ChevronRight, Share2, Store, ChevronDown, ChevronUp, Flag, Camera, User, Pencil, Trash2, CalendarCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice, timeAgo, telLink, waLink } from "@/lib/format";
 import { ListingCard } from "@/components/ListingCard";
 import { MapView } from "@/components/MapView";
+import { BoostModal } from "@/components/BoostModal";
+import { useFeatureFlags } from "@/hooks/use-feature-flags";
+import { incrementBoostView } from "@/lib/boost.functions";
 
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({ meta: [{ title: "Listing — souqss" }] }),
@@ -19,6 +22,7 @@ function ListingDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: flags } = useFeatureFlags();
   const [activeImg, setActiveImg] = useState(0);
   const [msgOpen, setMsgOpen] = useState(false);
   const [msg, setMsg] = useState("");
@@ -27,13 +31,14 @@ function ListingDetail() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [callbackSending, setCallbackSending] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["listing", id, user?.id ?? "anon"],
     queryFn: async () => {
       const cols = user
-        ? "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, phone, whatsapp"
-        : "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at";
+        ? "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, phone, whatsapp, boost_status, boost_views_purchased, boost_views_delivered, boost_expires_at"
+        : "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, boost_status, boost_views_purchased, boost_views_delivered, boost_expires_at";
       const { data: listingRaw, error } = await supabase
         .from("listings")
         .select(cols)
@@ -50,6 +55,15 @@ function ListingDetail() {
       return { listing, seller };
     },
   });
+
+  // Count a boost view (once per page load, non-owners only, active boost)
+  useEffect(() => {
+    if (!data?.listing) return;
+    if (user && user.id === data.listing.seller_id) return;
+    if (data.listing.boost_status !== "active") return;
+    incrementBoostView({ data: { listing_id: data.listing.id } }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.listing?.id]);
 
   async function startConversation() {
     if (!user) return navigate({ to: "/auth" });
@@ -429,6 +443,22 @@ function ListingDetail() {
                 </a>
               )}
 
+              {/* Boost button (owner + feature enabled) */}
+              {isOwner && flags?.boost_enabled && (
+                <button
+                  onClick={() => setBoostOpen(true)}
+                  className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[color:var(--ss-gold)] to-amber-500 py-2.5 text-[13px] font-semibold text-[color:var(--accent-foreground)] shadow hover:opacity-90 boost-glow"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {listing.boost_status === "active" ? "Add more views to boost" : "Boost this ad"}
+                </button>
+              )}
+              {isOwner && listing.boost_status === "active" && (
+                <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                  Boost active · {listing.boost_views_delivered}/{listing.boost_views_purchased} views delivered
+                </p>
+              )}
+
               {/* Actions */}
               <div className="mt-2.5 flex gap-2">
                 {isOwner ? (
@@ -480,6 +510,7 @@ function ListingDetail() {
           <SimilarListings category={listing.category} excludeId={listing.id} />
         </section>
       </main>
+      <BoostModal open={boostOpen} onOpenChange={setBoostOpen} listingId={listing.id} listingTitle={listing.title} />
     </div>
   );
 }
@@ -510,7 +541,7 @@ function SimilarListings({ category, excludeId }: { category: string; excludeId:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,price,currency,location,images,created_at,category,seller_id")
+        .select("id,title,price,currency,location,images,created_at,category,seller_id,boost_status,boost_expires_at")
         .eq("status", "active")
         .eq("category", category)
         .neq("id", excludeId)

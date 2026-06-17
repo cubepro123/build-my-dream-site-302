@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "@tanstack/react-router";
-import { Heart, MapPin, MessageCircle, Store } from "lucide-react";
+import { Heart, MapPin, MessageCircle, Store, Sparkles } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 import { formatPrice, timeAgo } from "@/lib/format";
@@ -18,6 +18,8 @@ export interface ListingCardData {
   created_at: string;
   category: string;
   seller_id?: string | null;
+  boost_status?: string | null;
+  boost_expires_at?: string | null;
 }
 
 export function ListingCard({ listing }: { listing: ListingCardData }) {
@@ -71,12 +73,24 @@ export function ListingCard({ listing }: { listing: ListingCardData }) {
     }
   }
 
+  const isBoosted =
+    listing.boost_status === "active" &&
+    (!listing.boost_expires_at || new Date(listing.boost_expires_at).getTime() > Date.now());
+
   return (
     <Link
       to="/listings/$id"
       params={{ id: listing.id }}
-      className="group relative block overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevated)]"
+      className={cn(
+        "group relative block overflow-hidden rounded-xl border bg-card shadow-[var(--shadow-card)] transition hover:-translate-y-0.5 hover:shadow-[var(--shadow-elevated)]",
+        isBoosted && "boost-glow border-[color:var(--ss-gold)]/60",
+      )}
     >
+      {isBoosted && (
+        <span className="absolute left-2 top-2 z-10 inline-flex items-center gap-1 rounded-full bg-[color:var(--ss-gold)] px-2 py-0.5 text-[10px] font-bold text-[color:var(--accent-foreground)] shadow">
+          <Sparkles className="h-3 w-3" /> BOOSTED
+        </span>
+      )}
       <button
         type="button"
         aria-label={isFav ? "Remove from favorites" : "Save to favorites"}

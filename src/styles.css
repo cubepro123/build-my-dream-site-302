@@ -173,3 +173,10 @@
 @media (prefers-reduced-motion: reduce) {
   .animate-blob, .animate-shimmer { animation: none; }
 }
+
+@keyframes boostPulse {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.55), 0 4px 16px rgba(245, 158, 11, 0.25); }
+  50%      { box-shadow: 0 0 0 6px rgba(245, 158, 11, 0.0), 0 6px 22px rgba(245, 158, 11, 0.4); }
+}
+.boost-glow { animation: boostPulse 2.4s ease-in-out infinite; }
+@media (prefers-reduced-motion: reduce) { .boost-glow { animation: none; } }
