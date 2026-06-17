@@ -14,6 +14,74 @@ export type Database = {
   }
   public: {
     Tables: {
+      account_deletion_tokens: {
+        Row: {
+          created_at: string
+          expires_at: string
+          token: string
+          used_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at: string
+          token: string
+          used_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          token?: string
+          used_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      boost_orders: {
+        Row: {
+          amount_naira: number
+          created_at: string
+          id: string
+          listing_id: string
+          paid_at: string | null
+          paystack_reference: string
+          status: string
+          user_id: string
+          views: number
+        }
+        Insert: {
+          amount_naira: number
+          created_at?: string
+          id?: string
+          listing_id: string
+          paid_at?: string | null
+          paystack_reference: string
+          status?: string
+          user_id: string
+          views: number
+        }
+        Update: {
+          amount_naira?: number
+          created_at?: string
+          id?: string
+          listing_id?: string
+          paid_at?: string | null
+          paystack_reference?: string
+          status?: string
+          user_id?: string
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "boost_orders_listing_id_fkey"
+            columns: ["listing_id"]
+            isOneToOne: false
+            referencedRelation: "listings"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       conversations: {
         Row: {
           buyer_id: string
@@ -108,8 +176,37 @@ export type Database = {
           },
         ]
       }
+      feature_flags: {
+        Row: {
+          bool_value: boolean | null
+          key: string
+          num_value: number | null
+          text_value: string | null
+          updated_at: string
+        }
+        Insert: {
+          bool_value?: boolean | null
+          key: string
+          num_value?: number | null
+          text_value?: string | null
+          updated_at?: string
+        }
+        Update: {
+          bool_value?: boolean | null
+          key?: string
+          num_value?: number | null
+          text_value?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       listings: {
         Row: {
+          boost_expires_at: string | null
+          boost_started_at: string | null
+          boost_status: string
+          boost_views_delivered: number
+          boost_views_purchased: number
           category: string
           condition: string
           created_at: string
@@ -131,6 +228,11 @@ export type Database = {
           whatsapp: string | null
         }
         Insert: {
+          boost_expires_at?: string | null
+          boost_started_at?: string | null
+          boost_status?: string
+          boost_views_delivered?: number
+          boost_views_purchased?: number
           category: string
           condition?: string
           created_at?: string
@@ -152,6 +254,11 @@ export type Database = {
           whatsapp?: string | null
         }
         Update: {
+          boost_expires_at?: string | null
+          boost_started_at?: string | null
+          boost_status?: string
+          boost_views_delivered?: number
+          boost_views_purchased?: number
           category?: string
           condition?: string
           created_at?: string
@@ -364,15 +471,43 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
       is_blocked_between: { Args: { _a: string; _b: string }; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      app_role: "admin" | "user"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -499,6 +634,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      app_role: ["admin", "user"],
+    },
   },
 } as const
