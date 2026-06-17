@@ -1,8 +1,8 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { Store, Briefcase, ShoppingBag, ExternalLink, Pencil, Upload, Loader2 } from "lucide-react";
+import { Store, Briefcase, ShoppingBag, ExternalLink, Pencil, Upload, Loader2, Trash2, AlertTriangle } from "lucide-react";
 import { Header } from "@/components/Header";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { MapPicker } from "@/components/MapPicker";
+import { requestAccountDeletion } from "@/lib/admin.functions";
 
 export const Route = createFileRoute("/_authenticated/profile")({
   head: () => ({ meta: [{ title: "Profile — souqss" }] }),
@@ -25,7 +26,11 @@ const SHOP_TYPE_LABEL: Record<ShopType, { name: string; desc: string; icon: type
 
 function ProfilePage() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const qc = useQueryClient();
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [deleteSending, setDeleteSending] = useState(false);
+  const [deleteSent, setDeleteSent] = useState(false);
   const [logoUploading, setLogoUploading] = useState(false);
   const [form, setForm] = useState({
     full_name: "",
