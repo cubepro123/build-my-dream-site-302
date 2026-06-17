@@ -541,7 +541,7 @@ function SimilarListings({ category, excludeId }: { category: string; excludeId:
     queryFn: async () => {
       const { data, error } = await supabase
         .from("listings")
-        .select("id,title,price,currency,location,images,created_at,category,seller_id")
+        .select("id,title,price,currency,location,images,created_at,category,seller_id,boost_status,boost_expires_at")
         .eq("status", "active")
         .eq("category", category)
         .neq("id", excludeId)

@@ -29,7 +29,7 @@ function FavoritesPage() {
       if (ids.length === 0) return [];
       const { data: rows, error: e2 } = await supabase
         .from("listings")
-        .select("id,title,price,currency,location,images,created_at,category,seller_id")
+        .select("id,title,price,currency,location,images,created_at,category,seller_id,boost_status,boost_expires_at")
         .in("id", ids)
         .eq("status", "active");
       if (e2) throw e2;
