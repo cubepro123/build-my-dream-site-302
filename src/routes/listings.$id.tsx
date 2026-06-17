@@ -443,6 +443,22 @@ function ListingDetail() {
                 </a>
               )}
 
+              {/* Boost button (owner + feature enabled) */}
+              {isOwner && flags?.boost_enabled && (
+                <button
+                  onClick={() => setBoostOpen(true)}
+                  className="mt-2.5 inline-flex w-full items-center justify-center gap-1.5 rounded-lg bg-gradient-to-r from-[color:var(--ss-gold)] to-amber-500 py-2.5 text-[13px] font-semibold text-[color:var(--accent-foreground)] shadow hover:opacity-90 boost-glow"
+                >
+                  <Sparkles className="h-4 w-4" />
+                  {listing.boost_status === "active" ? "Add more views to boost" : "Boost this ad"}
+                </button>
+              )}
+              {isOwner && listing.boost_status === "active" && (
+                <p className="mt-1.5 text-center text-[11px] text-muted-foreground">
+                  Boost active · {listing.boost_views_delivered}/{listing.boost_views_purchased} views delivered
+                </p>
+              )}
+
               {/* Actions */}
               <div className="mt-2.5 flex gap-2">
                 {isOwner ? (
@@ -494,6 +510,7 @@ function ListingDetail() {
           <SimilarListings category={listing.category} excludeId={listing.id} />
         </section>
       </main>
+      <BoostModal open={boostOpen} onOpenChange={setBoostOpen} listingId={listing.id} listingTitle={listing.title} />
     </div>
   );
 }
