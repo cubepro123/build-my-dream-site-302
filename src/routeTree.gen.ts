@@ -14,6 +14,7 @@ import { Route as ResetPasswordRouteImport } from './routes/reset-password'
 import { Route as PrivacyRouteImport } from './routes/privacy'
 import { Route as ForgotPasswordRouteImport } from './routes/forgot-password'
 import { Route as DisclaimerRouteImport } from './routes/disclaimer'
+import { Route as DeleteAccountRouteImport } from './routes/delete-account'
 import { Route as ContactRouteImport } from './routes/contact'
 import { Route as AuthRouteImport } from './routes/auth'
 import { Route as AuthenticatedRouteRouteImport } from './routes/_authenticated/route'
@@ -25,7 +26,10 @@ import { Route as AuthenticatedProfileRouteImport } from './routes/_authenticate
 import { Route as AuthenticatedMyListingsRouteImport } from './routes/_authenticated/my-listings'
 import { Route as AuthenticatedMessagesRouteImport } from './routes/_authenticated/messages'
 import { Route as AuthenticatedFavoritesRouteImport } from './routes/_authenticated/favorites'
+import { Route as AuthenticatedAdminRouteImport } from './routes/_authenticated/admin'
 import { Route as ApiPublicSignupRouteImport } from './routes/api/public/signup'
+import { Route as ApiPublicPaystackWebhookRouteImport } from './routes/api/public/paystack-webhook'
+import { Route as ApiPublicAccountDeletionConfirmRouteImport } from './routes/api/public/account-deletion-confirm'
 import { Route as AuthenticatedMessagesIdRouteImport } from './routes/_authenticated/messages.$id'
 import { Route as AuthenticatedEditIdRouteImport } from './routes/_authenticated/edit.$id'
 
@@ -52,6 +56,11 @@ const ForgotPasswordRoute = ForgotPasswordRouteImport.update({
 const DisclaimerRoute = DisclaimerRouteImport.update({
   id: '/disclaimer',
   path: '/disclaimer',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DeleteAccountRoute = DeleteAccountRouteImport.update({
+  id: '/delete-account',
+  path: '/delete-account',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ContactRoute = ContactRouteImport.update({
@@ -108,11 +117,28 @@ const AuthenticatedFavoritesRoute = AuthenticatedFavoritesRouteImport.update({
   path: '/favorites',
   getParentRoute: () => AuthenticatedRouteRoute,
 } as any)
+const AuthenticatedAdminRoute = AuthenticatedAdminRouteImport.update({
+  id: '/admin',
+  path: '/admin',
+  getParentRoute: () => AuthenticatedRouteRoute,
+} as any)
 const ApiPublicSignupRoute = ApiPublicSignupRouteImport.update({
   id: '/api/public/signup',
   path: '/api/public/signup',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicPaystackWebhookRoute =
+  ApiPublicPaystackWebhookRouteImport.update({
+    id: '/api/public/paystack-webhook',
+    path: '/api/public/paystack-webhook',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiPublicAccountDeletionConfirmRoute =
+  ApiPublicAccountDeletionConfirmRouteImport.update({
+    id: '/api/public/account-deletion-confirm',
+    path: '/api/public/account-deletion-confirm',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 const AuthenticatedMessagesIdRoute = AuthenticatedMessagesIdRouteImport.update({
   id: '/$id',
   path: '/$id',
@@ -128,11 +154,13 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/messages': typeof AuthenticatedMessagesRouteWithChildren
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -142,17 +170,21 @@ export interface FileRoutesByFullPath {
   '/shop/$id': typeof ShopIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/messages/$id': typeof AuthenticatedMessagesIdRoute
+  '/api/public/account-deletion-confirm': typeof ApiPublicAccountDeletionConfirmRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/signup': typeof ApiPublicSignupRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/admin': typeof AuthenticatedAdminRoute
   '/favorites': typeof AuthenticatedFavoritesRoute
   '/messages': typeof AuthenticatedMessagesRouteWithChildren
   '/my-listings': typeof AuthenticatedMyListingsRoute
@@ -162,6 +194,8 @@ export interface FileRoutesByTo {
   '/shop/$id': typeof ShopIdRoute
   '/edit/$id': typeof AuthenticatedEditIdRoute
   '/messages/$id': typeof AuthenticatedMessagesIdRoute
+  '/api/public/account-deletion-confirm': typeof ApiPublicAccountDeletionConfirmRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/signup': typeof ApiPublicSignupRoute
 }
 export interface FileRoutesById {
@@ -170,11 +204,13 @@ export interface FileRoutesById {
   '/_authenticated': typeof AuthenticatedRouteRouteWithChildren
   '/auth': typeof AuthRoute
   '/contact': typeof ContactRoute
+  '/delete-account': typeof DeleteAccountRoute
   '/disclaimer': typeof DisclaimerRoute
   '/forgot-password': typeof ForgotPasswordRoute
   '/privacy': typeof PrivacyRoute
   '/reset-password': typeof ResetPasswordRoute
   '/terms': typeof TermsRoute
+  '/_authenticated/admin': typeof AuthenticatedAdminRoute
   '/_authenticated/favorites': typeof AuthenticatedFavoritesRoute
   '/_authenticated/messages': typeof AuthenticatedMessagesRouteWithChildren
   '/_authenticated/my-listings': typeof AuthenticatedMyListingsRoute
@@ -184,6 +220,8 @@ export interface FileRoutesById {
   '/shop/$id': typeof ShopIdRoute
   '/_authenticated/edit/$id': typeof AuthenticatedEditIdRoute
   '/_authenticated/messages/$id': typeof AuthenticatedMessagesIdRoute
+  '/api/public/account-deletion-confirm': typeof ApiPublicAccountDeletionConfirmRoute
+  '/api/public/paystack-webhook': typeof ApiPublicPaystackWebhookRoute
   '/api/public/signup': typeof ApiPublicSignupRoute
 }
 export interface FileRouteTypes {
@@ -192,11 +230,13 @@ export interface FileRouteTypes {
     | '/'
     | '/auth'
     | '/contact'
+    | '/delete-account'
     | '/disclaimer'
     | '/forgot-password'
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/admin'
     | '/favorites'
     | '/messages'
     | '/my-listings'
@@ -206,17 +246,21 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/edit/$id'
     | '/messages/$id'
+    | '/api/public/account-deletion-confirm'
+    | '/api/public/paystack-webhook'
     | '/api/public/signup'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/auth'
     | '/contact'
+    | '/delete-account'
     | '/disclaimer'
     | '/forgot-password'
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/admin'
     | '/favorites'
     | '/messages'
     | '/my-listings'
@@ -226,6 +270,8 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/edit/$id'
     | '/messages/$id'
+    | '/api/public/account-deletion-confirm'
+    | '/api/public/paystack-webhook'
     | '/api/public/signup'
   id:
     | '__root__'
@@ -233,11 +279,13 @@ export interface FileRouteTypes {
     | '/_authenticated'
     | '/auth'
     | '/contact'
+    | '/delete-account'
     | '/disclaimer'
     | '/forgot-password'
     | '/privacy'
     | '/reset-password'
     | '/terms'
+    | '/_authenticated/admin'
     | '/_authenticated/favorites'
     | '/_authenticated/messages'
     | '/_authenticated/my-listings'
@@ -247,6 +295,8 @@ export interface FileRouteTypes {
     | '/shop/$id'
     | '/_authenticated/edit/$id'
     | '/_authenticated/messages/$id'
+    | '/api/public/account-deletion-confirm'
+    | '/api/public/paystack-webhook'
     | '/api/public/signup'
   fileRoutesById: FileRoutesById
 }
@@ -255,6 +305,7 @@ export interface RootRouteChildren {
   AuthenticatedRouteRoute: typeof AuthenticatedRouteRouteWithChildren
   AuthRoute: typeof AuthRoute
   ContactRoute: typeof ContactRoute
+  DeleteAccountRoute: typeof DeleteAccountRoute
   DisclaimerRoute: typeof DisclaimerRoute
   ForgotPasswordRoute: typeof ForgotPasswordRoute
   PrivacyRoute: typeof PrivacyRoute
@@ -262,6 +313,8 @@ export interface RootRouteChildren {
   TermsRoute: typeof TermsRoute
   ListingsIdRoute: typeof ListingsIdRoute
   ShopIdRoute: typeof ShopIdRoute
+  ApiPublicAccountDeletionConfirmRoute: typeof ApiPublicAccountDeletionConfirmRoute
+  ApiPublicPaystackWebhookRoute: typeof ApiPublicPaystackWebhookRoute
   ApiPublicSignupRoute: typeof ApiPublicSignupRoute
 }
 
@@ -300,6 +353,13 @@ declare module '@tanstack/react-router' {
       path: '/disclaimer'
       fullPath: '/disclaimer'
       preLoaderRoute: typeof DisclaimerRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/delete-account': {
+      id: '/delete-account'
+      path: '/delete-account'
+      fullPath: '/delete-account'
+      preLoaderRoute: typeof DeleteAccountRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/contact': {
@@ -379,11 +439,32 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AuthenticatedFavoritesRouteImport
       parentRoute: typeof AuthenticatedRouteRoute
     }
+    '/_authenticated/admin': {
+      id: '/_authenticated/admin'
+      path: '/admin'
+      fullPath: '/admin'
+      preLoaderRoute: typeof AuthenticatedAdminRouteImport
+      parentRoute: typeof AuthenticatedRouteRoute
+    }
     '/api/public/signup': {
       id: '/api/public/signup'
       path: '/api/public/signup'
       fullPath: '/api/public/signup'
       preLoaderRoute: typeof ApiPublicSignupRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/paystack-webhook': {
+      id: '/api/public/paystack-webhook'
+      path: '/api/public/paystack-webhook'
+      fullPath: '/api/public/paystack-webhook'
+      preLoaderRoute: typeof ApiPublicPaystackWebhookRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/public/account-deletion-confirm': {
+      id: '/api/public/account-deletion-confirm'
+      path: '/api/public/account-deletion-confirm'
+      fullPath: '/api/public/account-deletion-confirm'
+      preLoaderRoute: typeof ApiPublicAccountDeletionConfirmRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/_authenticated/messages/$id': {
@@ -417,6 +498,7 @@ const AuthenticatedMessagesRouteWithChildren =
   )
 
 interface AuthenticatedRouteRouteChildren {
+  AuthenticatedAdminRoute: typeof AuthenticatedAdminRoute
   AuthenticatedFavoritesRoute: typeof AuthenticatedFavoritesRoute
   AuthenticatedMessagesRoute: typeof AuthenticatedMessagesRouteWithChildren
   AuthenticatedMyListingsRoute: typeof AuthenticatedMyListingsRoute
@@ -426,6 +508,7 @@ interface AuthenticatedRouteRouteChildren {
 }
 
 const AuthenticatedRouteRouteChildren: AuthenticatedRouteRouteChildren = {
+  AuthenticatedAdminRoute: AuthenticatedAdminRoute,
   AuthenticatedFavoritesRoute: AuthenticatedFavoritesRoute,
   AuthenticatedMessagesRoute: AuthenticatedMessagesRouteWithChildren,
   AuthenticatedMyListingsRoute: AuthenticatedMyListingsRoute,
@@ -442,6 +525,7 @@ const rootRouteChildren: RootRouteChildren = {
   AuthenticatedRouteRoute: AuthenticatedRouteRouteWithChildren,
   AuthRoute: AuthRoute,
   ContactRoute: ContactRoute,
+  DeleteAccountRoute: DeleteAccountRoute,
   DisclaimerRoute: DisclaimerRoute,
   ForgotPasswordRoute: ForgotPasswordRoute,
   PrivacyRoute: PrivacyRoute,
@@ -449,6 +533,8 @@ const rootRouteChildren: RootRouteChildren = {
   TermsRoute: TermsRoute,
   ListingsIdRoute: ListingsIdRoute,
   ShopIdRoute: ShopIdRoute,
+  ApiPublicAccountDeletionConfirmRoute: ApiPublicAccountDeletionConfirmRoute,
+  ApiPublicPaystackWebhookRoute: ApiPublicPaystackWebhookRoute,
   ApiPublicSignupRoute: ApiPublicSignupRoute,
 }
 export const routeTree = rootRouteImport
