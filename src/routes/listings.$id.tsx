@@ -1,14 +1,17 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useQuery } from "@tanstack/react-query";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { toast } from "sonner";
-import { MapPin, PhoneCall, MessageCircle, ArrowLeft, ShieldCheck, ChevronLeft, ChevronRight, Share2, Store, ChevronDown, ChevronUp, Flag, Camera, User, Pencil, Trash2, CalendarCheck } from "lucide-react";
+import { MapPin, PhoneCall, MessageCircle, ArrowLeft, ShieldCheck, ChevronLeft, ChevronRight, Share2, Store, ChevronDown, ChevronUp, Flag, Camera, User, Pencil, Trash2, CalendarCheck, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/lib/auth-context";
 import { formatPrice, timeAgo, telLink, waLink } from "@/lib/format";
 import { ListingCard } from "@/components/ListingCard";
 import { MapView } from "@/components/MapView";
+import { BoostModal } from "@/components/BoostModal";
+import { useFeatureFlags } from "@/hooks/use-feature-flags";
+import { incrementBoostView } from "@/lib/boost.functions";
 
 export const Route = createFileRoute("/listings/$id")({
   head: () => ({ meta: [{ title: "Listing — souqss" }] }),
@@ -19,6 +22,7 @@ function ListingDetail() {
   const { id } = Route.useParams();
   const { user } = useAuth();
   const navigate = useNavigate();
+  const { data: flags } = useFeatureFlags();
   const [activeImg, setActiveImg] = useState(0);
   const [msgOpen, setMsgOpen] = useState(false);
   const [msg, setMsg] = useState("");
@@ -27,13 +31,14 @@ function ListingDetail() {
   const [descExpanded, setDescExpanded] = useState(false);
   const [callbackSending, setCallbackSending] = useState(false);
   const [booking, setBooking] = useState(false);
+  const [boostOpen, setBoostOpen] = useState(false);
 
   const { data, isLoading } = useQuery({
     queryKey: ["listing", id, user?.id ?? "anon"],
     queryFn: async () => {
       const cols = user
-        ? "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, phone, whatsapp"
-        : "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at";
+        ? "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, phone, whatsapp, boost_status, boost_views_purchased, boost_views_delivered, boost_expires_at"
+        : "id, seller_id, title, description, price, currency, category, condition, location, listing_lat, listing_lng, listing_address, images, status, created_at, updated_at, boost_status, boost_views_purchased, boost_views_delivered, boost_expires_at";
       const { data: listingRaw, error } = await supabase
         .from("listings")
         .select(cols)
@@ -50,6 +55,15 @@ function ListingDetail() {
       return { listing, seller };
     },
   });
+
+  // Count a boost view (once per page load, non-owners only, active boost)
+  useEffect(() => {
+    if (!data?.listing) return;
+    if (user && user.id === data.listing.seller_id) return;
+    if (data.listing.boost_status !== "active") return;
+    incrementBoostView({ data: { listing_id: data.listing.id } }).catch(() => {});
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data?.listing?.id]);
 
   async function startConversation() {
     if (!user) return navigate({ to: "/auth" });
