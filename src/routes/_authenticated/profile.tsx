@@ -1,4 +1,4 @@
-import { createFileRoute, useNavigate } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { toast } from "sonner";
@@ -26,7 +26,6 @@ const SHOP_TYPE_LABEL: Record<ShopType, { name: string; desc: string; icon: type
 
 function ProfilePage() {
   const { user } = useAuth();
-  const navigate = useNavigate();
   const qc = useQueryClient();
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [deleteSending, setDeleteSending] = useState(false);
