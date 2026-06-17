@@ -3,7 +3,9 @@ import { z } from "zod";
 import { requireSupabaseAuth } from "@/integrations/supabase/auth-middleware";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/resend";
-const FROM = "souqss <notifications@souqss.tech>";
+// Until your custom domain is verified in Resend, send from the shared test sender.
+// To switch back, set RESEND_FROM env var (e.g. "souqss <notifications@yourdomain.com>") after verifying DNS.
+const FROM = process.env.RESEND_FROM || "souqss <onboarding@resend.dev>";
 const NOTIFY_INBOX = "hellosouqss@gmail.com";
 
 async function sendEmail(payload: {
