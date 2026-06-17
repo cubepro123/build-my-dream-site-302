@@ -41,7 +41,7 @@ function ShopPage() {
       if (!profile) return null;
       const { data: listings } = await supabase
         .from("listings")
-        .select("id, title, price, currency, location, images, created_at, category, seller_id")
+        .select("id, title, price, currency, location, images, created_at, category, seller_id, boost_status, boost_expires_at")
         .eq("seller_id", profile.id)
         .eq("status", "active")
         .order("created_at", { ascending: false });
